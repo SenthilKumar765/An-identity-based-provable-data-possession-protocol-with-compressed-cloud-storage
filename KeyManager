@@ -1,0 +1,71 @@
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import javax.crypto.Cipher;
+import java.util.Base64;
+
+public class KeyManager {
+
+    private KeyPair keyPair;
+
+    // Constructor: Automatically generates a new RSA Key Pair when KeyManager is created
+    public KeyManager() throws Exception {
+        this.keyPair = generateKeyPair();
+    }
+
+    // Method to generate RSA Key Pair (Public and Private Keys)
+    private KeyPair generateKeyPair() throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048); // Key size
+        return keyGen.generateKeyPair();
+    }
+
+    // Get Public Key
+    public PublicKey getPublicKey() {
+        return keyPair.getPublic();
+    }
+
+    // Get Private Key
+    public PrivateKey getPrivateKey() {
+        return keyPair.getPrivate();
+    }
+
+    // Encrypt data using Public Key
+    public String encryptIdentity(String identity) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, keyPair.getPublic());
+        byte[] encryptedBytes = cipher.doFinal(identity.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    // Decrypt data using Private Key
+    public String decryptIdentity(String encryptedIdentity) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedIdentity));
+        return new String(decryptedBytes);
+    }
+
+    // Test Example
+    public static void main(String[] args) {
+        try {
+            // Create KeyManager instance
+            KeyManager keyManager = new KeyManager();
+
+            // Example identity to encrypt
+            String identity = "user@example.com";
+
+            // Encrypt the identity
+            String encryptedIdentity = keyManager.encryptIdentity(identity);
+            System.out.println("Encrypted Identity: " + encryptedIdentity);
+
+            // Decrypt the identity
+            String decryptedIdentity = keyManager.decryptIdentity(encryptedIdentity);
+            System.out.println("Decrypted Identity: " + decryptedIdentity);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
